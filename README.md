@@ -1,2 +1,165 @@
 # meraki-rpi
-Syslog, MQTT, Webhook, Radius for a Cisco Meraki Organization
+
+The goal was to create a device that could map multiple functions. To be able to implement the project easily, a Raspberry Pi with the Raspbian operating system was used.
+The following functions are installed:
+> Syslog Server
+> MQTT Server
+> Webhook Server
+> Radius Server
+
+The following explains how to install and set up the various functions.</br></br>
+
+---
+</br>
+
+### 1. Get Raspbian I will not go further into the installation of Raspbian
+
+  ```
+  https://www.raspberrypi.com/software/
+  ```
+
+### 2. Basic configuration for Raspbian
+First, some basic settings can be made using the configuration tool provided by Raspbian:
+  ```
+  sudo raspi-config
+  ```
+After that, we should do some updates:
+  ```
+  sudo apt-get updates
+  sudo apt-get upgrades
+  ```
+
+### 3. Install Syslog and display events
+The first command installs Syslog, the second command displays all Syslog messages in real time.
+  ```
+  sudo apt-get install rsyslog
+  command tail -f /var/log/syslog
+  ```
+Now go to your Meraki Organization and configure Syslog:
+  > Network-wide -> General -> Reporting
+  ```
+  Server IP: 'IP from Raspberry'
+  Port: 514
+  Roles: Air Marshal events, Wireless event log, Switch event log, Security events, Appliance event log
+  ```
+  
+### 4. Install MQTT and display events
+  ```
+  sudo apt-get install mosquitto mosquitto-clients
+  ```
+First we allow access to our MQTT and set the port:
+  ```
+  sudo nano /etc/mosquitto/conf.d/010-listener-with-users.conf
+  ```
+  > listener 1883</br>
+  > allow_anonymous true
+
+Now restart the service and check if it is active:
+  ```
+  sudo systemctl status mosquitto
+  sudo systemctl restart mosquitto
+  ```
+Now we can listen to different MQTT topics. As wildcard can be used #. To better understand which Topics are available, a brief overview of the current MQTT capabilities at Cisco Meraki.
+
+**Cameras**</br>
+How to add an MQTT Broker:
+  > Cameras -> Select one -> Settings -> Sense -> MQTT Broker</br>
+  ```
+  Broker Name: RPi
+  Host: 'IP from Raspberry'
+  Port: 1883
+  ```
+Which Topics exist:</br>
+- Object detections from whole camera frame:
+  > /merakimv/Q2xx-xxxx-xxxx/raw_detections
+- Current state of zone:
+  > /merakimv/Q2xx-xxxx-xxxx/000000000000
+- Audio detections from the camera’s microphone:
+  > /merakimv/Q2xx-xxxx-xxxx/audio_detections
+- Measurements from the camera’s microphone (dB):
+  > /merakimv/Q2xx-xxxx-xxxx/audio_analytics
+  
+**Environmental (IoT)**</br>
+How to add an MQTT Broker:
+  > Environmental -> MQTT Brokers -></br>
+  ```
+  Name: RPi
+  Host: 'IP from Raspberry'
+  Port: 1883
+  ```
+Which Topics exist:</br>
+- Temperature, Humidity, Door, Water and Button data from an MT:
+  > meraki/v1/mt/Network_Id/ble/{deviceMac}/temperature</br>
+  > meraki/v1/mt/Network_Id/ble/{deviceMac}/humidity</br>
+  > meraki/v1/mt/Network_Id/ble/{deviceMac}/door</br>
+  > meraki/v1/mt/Network_Id/ble/{deviceMac}/waterDetection</br>
+  > meraki/v1/mt/Network_Id/ble/{deviceMac}/buttonPressed
+- Cable and USB Power connected to an MT:
+  > meraki/v1/mt/Network_Id/ble/{deviceMac}/cableConnected</br>
+  > meraki/v1/mt/Network_Id/ble/{deviceMac}/tamperDetection
+- Battery percentage and USB power status:
+  > meraki/v1/mt/Network_Id/ble/{deviceMac}/usbPowered</br>
+  > meraki/v1/mt/Network_Id/ble/{deviceMac}/batteryPercentage
+- RSSI data for an MT:
+  > meraki/v1/mt/Network_Id/ble/{deviceMac}/gateway/{gatewayMac}/rssi
+
+**Getting MQTT data**</br>
+As we can see from the two topics, this one differs. We have the possibility to listen to only one topic at a time, but we also have the possibility to listen to several topics. With the wildcard we can listen to all subordinate topics.
+  ```
+  mosquitto_sub -h 127.0.0.1 -v -t meraki/#
+  mosquitto_sub -h 127.0.0.1 -v -t /merakimv/#
+  mosquitto_sub -h 127.0.0.1 -v -t meraki/# -t /merakimv/#
+  mosquitto_sub -h 127.0.0.1 -v -t /merakimv/Q2xx-xxxx-xxxx/audio_analytics
+  ```
+The -t option allows us to specify a topic and the -v option shows us the entire topic path live.
+
+What good is collecting MQTT data if we don't use it? Nothing!</br>
+So let's query the data with a Python script and use it.
+
+First we need a Python Library for MQTT
+  ```
+  pip install paho-mqtt
+  ```
+Now lets write a small script, which print all MQTT messages:
+  ```
+  import paho.mqtt.client as mqtt
+
+  def on_message(client, userdata, message):
+     print("message received ", str(message.payload.decode("utf-8")))
+     print("message topic=", message.topic)
+
+
+  mqttBroker = "127.0.0.1"  # ip of the server
+  client = mqtt.Client('my-mqtt-client')  # create instance
+  client.connect(mqttBroker)  # connect to broker
+  client.subscribe("meraki/v1/mt/#")  # subscribe to topic
+
+  client.on_message = on_message  # call function for messages
+  client.loop_forever()  # start an endless loop
+  ```
+  
+  So we get all the messages and topics, to make sense of the data we have to look inside the data.
+  ```
+  import paho.mqtt.client as mqtt
+  import json
+
+  def on_message(client, userdata, message):
+     data = json.loads(message.payload.decode("utf-8"))
+     if 'action' in data:
+        if data['action'] == 'shortPress':
+           print('Short Press - do something')
+        if data['action'] == 'longPress':
+           print('Long Press - do something')
+     if 'open' in data:
+        if data['open'] is True:
+           print('Door is open - do something')
+
+
+  mqttBroker = "127.0.0.1"  # ip of the server
+  client = mqtt.Client('my-mqtt-client')  # create instance
+  client.connect(mqttBroker)  # connect to broker
+  client.subscribe("meraki/v1/mt/#")  # subscribe to topic
+
+  client.on_message = on_message  # call function for messages
+  client.loop_forever()  # start an endless loop
+  ```
