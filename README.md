@@ -1,4 +1,4 @@
-# meraki-rpi
+# Raspberry Pi Toolbox for Cisco Meraki
 
 The goal was to create a device that could map multiple functions. To be able to implement the project easily, a Raspberry Pi with the Raspbian operating system was used.
 The following functions are installed:
