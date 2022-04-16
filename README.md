@@ -2,10 +2,10 @@
 
 The goal was to create a device that could map multiple functions. To be able to implement the project easily, a Raspberry Pi with the Raspbian operating system was used.
 The following functions are installed:
-> Syslog Server
-> MQTT Server
-> Webhook Server
-> Radius Server
+  > Syslog Server</br>
+  > MQTT Server</br>
+  > Webhook Server</br>
+  > Radius Server
 
 The following explains how to install and set up the various functions.</br></br>
 
@@ -138,7 +138,7 @@ Now lets write a small script, which print all MQTT messages:
   client.loop_forever()  # start an endless loop
   ```
   
-  So we get all the messages and topics, to make sense of the data we have to look inside the data.
+  So we get all the messages and topics, to make sense of the data we have to look inside the data. (See file: mqtt_subscribe.py)
   ```
   import paho.mqtt.client as mqtt
   import json
@@ -163,3 +163,49 @@ Now lets write a small script, which print all MQTT messages:
   client.on_message = on_message  # call function for messages
   client.loop_forever()  # start an endless loop
   ```
+  
+### 5. Install a Webhook Server
+A webhook is in "principle" the opposite direction to the API. So we need a server that reacts to incoming messages or executes actions.
+First we need a Python Library for a Webserver
+  ```
+  pip install flask
+  ```
+Now lets write a small script, which print all incoming Webhook messages:
+  ```
+  from flask import Flask, request, Response
+
+  app = Flask(__name__)  # create instance
+
+
+  @app.route('/webhook', methods=['POST'])  # define endpoint
+  def respond():
+     """ if a webhook is incoming, return status code 200 and print the json """
+     if request.method == 'POST':  # if POST
+        print(request.json)  # print webhook (json input)
+        return Response(status=200)  # return status code 200
+
+
+  if __name__ == '__main__':
+     app.run(host='0.0.0.0', debug=True, port=19000)
+  ```
+Problem: Meraki webhooks are coming from Meraki Cloud. Accordingly, we need access from external.
+We now have two options. Either we open a port, which we forward to the Raspberry. Alternatively we can use ngrok to establish a connection from external.
+
+**How to use ngrok?**</br>
+First download and install ngrok:
+  > https://ngrok.com/download</br>
+
+After this just run it for a specific port:
+  ```
+  ngrok http 19000
+  ```
+
+**How to use ngrok?**</br>
+In order to be able to receive webhooks from Meraki, they still have to be configured:
+  > Network-wide -> Alerts -> Webhooks</br>
+  ```
+  Name: Raspberry Pi
+  URL: https://00aa-00-00-000-00.ngrok.io/webhook
+  Shared secret: 'your secret'
+  ```
+Now you should get an webhook by clicking on "send test webhook".
