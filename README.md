@@ -194,7 +194,7 @@ We now have two options. Either we open a port, which we forward to the Raspberr
 
 **How to use ngrok?**</br>
 First download and install ngrok:
-  > https://ngrok.com/download</br>
+  > https://ngrok.com/download
 
 After this just run it for a specific port:
   ```
