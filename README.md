@@ -1,16 +1,16 @@
 # Raspberry Pi Toolbox for Cisco Meraki
 
-The goal was to create a device that could map multiple functions. To be able to implement the project easily, a Raspberry Pi with the Raspbian operating system was used.
-The following functions are installed:
-  > Syslog Server</br>
-  > MQTT Server</br>
-  > Webhook Server</br>
-  > Radius Server
+The target is to create a device that could map multiple functions. A toolbox for working with Cisco Meraki. To be able to implement these features easily, I have chosen a Raspberry Pi with the Raspbian operating system.</br>
+The following functions should be provided:
+- [x] Syslog Server
+- [x] MQTT Server
+- [x] Webhook Server
+- [ ] Radius Server
+- [ ] DHCP Server
 
 The following explains how to install and set up the various functions.</br></br>
 
----
-</br>
+***
 
 ### 1. Get Raspbian I will not go further into the installation of Raspbian
 
