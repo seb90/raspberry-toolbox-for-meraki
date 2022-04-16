@@ -1,2 +1,3 @@
 /venv
-include.py
+../ext/meraki-everlong/include.py
+/pictures
