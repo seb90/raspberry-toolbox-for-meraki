@@ -7,6 +7,7 @@ The following functions should be provided:
 - [x] Webhook Server
 - [ ] Radius Server
 - [ ] DHCP Server
+- [ ] SAML SSO Server
 
 The following explains how to install and set up the various functions.</br></br>
 
@@ -18,7 +19,7 @@ The following explains how to install and set up the various functions.</br></br
   https://www.raspberrypi.com/software/
   ```
 
-### 2. Basic configuration for Raspbian
+**Basic configuration for Raspbian**</br>
 First, some basic settings can be made using the configuration tool provided by Raspbian:
   ```
   sudo raspi-config
@@ -29,7 +30,7 @@ After that, we should do some updates:
   sudo apt-get upgrades
   ```
 
-### 3. Install Syslog and display events
+### 2. Install Syslog and display events
 The first command installs Syslog, the second command displays all Syslog messages in real time.
   ```
   sudo apt-get install rsyslog
@@ -43,7 +44,7 @@ Now go to your Meraki Organization and configure Syslog:
   Roles: Air Marshal events, Wireless event log, Switch event log, Security events, Appliance event log
   ```
   
-### 4. Install MQTT and display events
+### 3. Install MQTT and display events
   ```
   sudo apt-get install mosquitto mosquitto-clients
   ```
@@ -164,7 +165,7 @@ Now lets write a small script, which print all MQTT messages:
   client.loop_forever()  # start an endless loop
   ```
   
-### 5. Install a Webhook Server
+### 4. Install a Webhook Server
 A webhook is in "principle" the opposite direction to the API. So we need a server that reacts to incoming messages or executes actions.
 First we need a Python Library for a Webserver
   ```
@@ -209,3 +210,7 @@ In order to be able to receive webhooks from Meraki, they still have to be confi
   Shared secret: 'your secret'
   ```
 Now you should get an webhook by clicking on "send test webhook".
+
+### 5. Install Radius with Gui
+I decided to use FreeRADIUS in the backend and daloRADIUS in the frontend.
+  > https://bytexd.com/freeradius-debian/
