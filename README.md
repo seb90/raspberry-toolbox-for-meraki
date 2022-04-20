@@ -209,7 +209,7 @@ In order to be able to receive webhooks from Meraki, they still have to be confi
   URL: https://00aa-00-00-000-00.ngrok.io/webhook
   Shared secret: 'your secret'
   ```
-Now you should get an webhook by clicking on "send test webhook".
+Now you should get an webhook by clicking "send test webhook".
 
 ### 5. Install Radius with Gui
 I decided to use FreeRADIUS in the backend and daloRADIUS in the frontend.
