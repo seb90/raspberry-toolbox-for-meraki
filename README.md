@@ -5,6 +5,7 @@ The following functions should be provided:
 - [x] Syslog Server
 - [x] MQTT Server
 - [x] Webhook Server
+- [x] SSH Service Tunnel
 - [ ] Radius Server
 - [ ] DHCP Server
 - [ ] SAML SSO Server
@@ -61,6 +62,10 @@ Now restart the service and check if it is active:
   sudo systemctl restart mosquitto
   ```
 Now we can listen to different MQTT topics. As wildcard can be used #. To better understand which Topics are available, a brief overview of the current MQTT capabilities at Cisco Meraki.
+
+**Wildcards**</br>
+- Plus sign (+): matches any name for a specific topic area ("/merakimv/+/0")
+- Hash sign (#): multi level wildcard, can used at the end of the topic ("/merakimv/#")
 
 **Cameras**</br>
 How to add an MQTT Broker:
@@ -209,8 +214,41 @@ In order to be able to receive webhooks from Meraki, they still have to be confi
   URL: https://00aa-00-00-000-00.ngrok.io/webhook
   Shared secret: 'your secret'
   ```
-Now you should get an webhook by clicking "send test webhook".
+Now you should get a webhook by clicking on "send test webhook".
 
-### 5. Install Radius with Gui
+### 5. Automatic SSH Service Tunnel
+If a Raspberry is to be used remotely, it is often useful to build a service tunnel to have access to the system at any time. To increase the comfort, the script should send the tunnel url to us via Webex.
+The first thing we need is pyngrok for our script. 
+  ```
+  pip install pyngrok
+  ```
+Now we can create a new python script
+  ```
+  from pyngrok import ngrok
+  import requests
+  import json
+  
+  ngrok_credentials = "xxxx"
+  webex_url = "https://api.ciscospark.com/v1/messages"
+  webex_access_token = "xxxx-xxx-xxx-xx-xxx"
+  headers = {'Authorization': 'Bearer ' + webex_access_token, 'Content-Type': 'application/json'}
+  webex_mails = ["Sebastian.Ehrhardt@blabla.de"]
+  
+  # Initiate ngrok SSH Tunnel
+  ngrok.set_auth_token(ngrok_credentials)
+  ssh_tunnel = ngrok.connect(22, "tcp")
+  tunnel = str(ngrok.get_tunnels())[22:].split('" -> "')[0]
+  
+  # Send all Information to Webex
+  message = f'*Raspberry Pi - DevNet Demo*\n System is now online\n SSH Service Tunnel is successfully started on {tunnel}'
+  for mail in webex_mails:
+    payload = json.dumps({"toPersonEmail": mail, "markdown": message, "text": message})
+    response = requests.request("POST", webex_url, headers=headers, data=payload)
+
+  while True:  # to keep the ngrok tunnel up
+    do_nothing = 1
+  ```
+
+### 6. Install Radius with Gui
 I decided to use FreeRADIUS in the backend and daloRADIUS in the frontend.
   > https://bytexd.com/freeradius-debian/

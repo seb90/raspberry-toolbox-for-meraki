@@ -3,7 +3,7 @@ from flask import Flask, request, Response
 app = Flask(__name__)  # create instance
 
 
-@app.route('/webhook', methods=['POST'])  # define endpoint
+@app.route('/', methods=['POST'])  # define endpoint
 def respond():
     """ if a webhook is incoming, return status code 200 and print the json """
     if request.method == 'POST':  # if POST
