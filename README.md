@@ -50,9 +50,24 @@ And remove the comment sign (#), the part should look like this:
   module(load="imtcp")
   input(type="imtcp" port="514")
   ```
+Let's create an template:
+  ```
+  sudo nano /etc/rsyslog.d/meraki.conf
+  ```
+Insert something like this:
+  ```
+  $template merakilog, "/var/log/meraki.log"
+
+  if $fromhost-ip startswith ["172.x.x.x", "172.x.x.x"] then -?merakilog
+  & stop
+  ```
+Restart the Service
+  ```
+  sudo systemctl restart rsyslog
+  ```
 This command displays all Syslog messages in real time.
   ```
-  command tail -f /var/log/syslog
+  command tail -f /var/log/meraki.log
   ```
 Now go to your Meraki Organization and configure Syslog:
   > Network-wide -> General -> Reporting
