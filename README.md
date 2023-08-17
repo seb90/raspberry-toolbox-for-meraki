@@ -32,9 +32,26 @@ After that, we should do some updates:
   ```
 
 ### 2. Install Syslog and display events
-The first command installs Syslog, the second command displays all Syslog messages in real time.
+Install Syslog
   ```
   sudo apt-get install rsyslog
+  ```
+Open the syslog configuration
+  ```
+  sudo nano /etc/rsyslog.conf
+  ```
+And remove the comment sign (#), the part should look like this:
+  ```
+  # provides UDP syslog reception
+  module(load="imudp")
+  input(type="imudp" port="514")
+
+  # provides TCP syslog reception
+  module(load="imtcp")
+  input(type="imtcp" port="514")
+  ```
+This command displays all Syslog messages in real time.
+  ```
   command tail -f /var/log/syslog
   ```
 Now go to your Meraki Organization and configure Syslog:
