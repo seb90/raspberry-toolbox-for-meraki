@@ -57,8 +57,17 @@ Let's create an template:
 Insert something like this:
   ```
   $template merakilog, "/var/log/meraki.log"
+  $template merakimrlog, "/var/log/meraki_mr.log"
+  $template merakiflow, "/var/log/meraki_flows.log"
+  $template merakifw, "/var/log/meraki_firewall.log"
 
-  if $fromhost-ip startswith ["172.x.x.x", "172.x.x.x"] then -?merakilog
+  if $msg contains 'ip_flow_start' or $msg contains 'ip_flow_end' then -?merakiflow
+  & stop
+  if $msg contains 'firewall' then -?merakifw
+  & stop
+  if $fromhost-ip startswith ["172.24.0.101"] then -?merakimrlog
+  & stop
+  if $fromhost-ip startswith ["172.24.4.1", "172.24.2.254"] then -?merakilog
   & stop
   ```
 Restart the Service
@@ -68,13 +77,14 @@ Restart the Service
 This command displays all Syslog messages in real time.
   ```
   command tail -f /var/log/meraki.log
+  command tail -f /var/log/meraki_firewall.log
   ```
 Now go to your Meraki Organization and configure Syslog:
   > Network-wide -> General -> Reporting
   ```
   Server IP: 'IP from Raspberry'
   Port: 514
-  Roles: Air Marshal events, Wireless event log, Switch event log, Security events, Appliance event log
+  Roles: Air Marshal events, Wireless event log, Switch event log, Security events, Appliance event log, Flows
   ```
   
 ### 3. Install MQTT and display events
