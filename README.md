@@ -61,7 +61,8 @@ Insert something like this:
   $template merakiflow, "/var/log/meraki_flows.log"
   $template merakifw, "/var/log/meraki_firewall.log"
 
-  if $msg contains 'ip_flow_start' or $msg contains 'ip_flow_end' then -?merakiflow
+  # ignore this messages:
+  if $msg contains 'ip_flow_start' or $msg contains 'ip_flow_end' then ~
   & stop
   if $msg contains 'firewall' then -?merakifw
   & stop
