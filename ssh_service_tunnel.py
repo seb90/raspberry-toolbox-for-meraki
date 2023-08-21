@@ -29,7 +29,7 @@ tunnel = str(ngrok.get_tunnels())[22:].split('" -> "')[0]
 
 
 # Send all Information to Webex
-message = f'*Raspberry Pi - DevNet Demo*\n System is now online\n SSH Service Tunnel is successfully started on {tunnel}'
+message = f'*Raspberry Pi - DevNet Demo*\n System is now online. SSH Tunnel successfully started.\n Use the following command to connect: **ssh {tunnel.split(":")[0]} -p {tunnel.split(":")[1]} -l USER**'
 for mail in webex_mails:
     payload = json.dumps({"toPersonEmail": mail, "markdown": message, "text": message})
     response = requests.request("POST", webex_url, headers=headers, data=payload)
